@@ -4,34 +4,29 @@ pipeline {
     environment {
         SMTP_HOST = "${env.SMTP_HOST ?: 'mailhog'}"
         SMTP_PORT = "${env.SMTP_PORT ?: '1025'}"
-        // NOTIFY_EMAIL must be set as a Jenkins env variable or via docker-compose
-        // It is intentionally NOT hardcoded here — see docker-compose.jenkins.yml
+        // NOTIFY_EMAIL must be set via docker-compose — never hardcoded here
     }
 
     stages {
 
-        // ------------------------------------------------------------------
-        // Uncomment this stage once tests are implemented (coverage >= 90%)
-        //
-        // stage('Test') {
-        //     steps {
-        //         script {
-        //             def services = ['sensor-service', 'alert-service']
-        //             services.each { svc ->
-        //                 dir("services/${svc}") {
-        //                     sh 'mvn test'
-        //                 }
-        //             }
-        //         }
-        //     }
-        //     post {
-        //         always {
-        //             junit allowEmptyResults: true,
-        //                   testResults: 'services/**/target/surefire-reports/*.xml'
-        //         }
-        //     }
-        // }
-        // ------------------------------------------------------------------
+        stage('Test') {
+            steps {
+                script {
+                    def services = ['sensor-service', 'alert-service']
+                    services.each { svc ->
+                        dir("services/${svc}") {
+                            sh 'mvn test'
+                        }
+                    }
+                }
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true,
+                          testResults: 'services/**/target/surefire-reports/*.xml'
+                }
+            }
+        }
 
         stage('Build') {
             steps {
@@ -59,11 +54,10 @@ pipeline {
                     fingerprint: true,
                     allowEmptyArchive: false
                 )
-                // Uncomment when tests are enabled:
-                // archiveArtifacts(
-                //     artifacts: 'services/**/target/surefire-reports/**',
-                //     allowEmptyArchive: true
-                // )
+                archiveArtifacts(
+                    artifacts: 'services/**/target/surefire-reports/**',
+                    allowEmptyArchive: true
+                )
             }
         }
     }
