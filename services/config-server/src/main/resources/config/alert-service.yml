@@ -31,3 +31,16 @@ resilience4j:
       retrypersonalized:
         max-attempts: 3
         wait-duration: 1000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+
+  endpoint:
+    health:
+      show-details: always
+
+  metrics:
+    tags:
+      application: ${spring.application.name}
