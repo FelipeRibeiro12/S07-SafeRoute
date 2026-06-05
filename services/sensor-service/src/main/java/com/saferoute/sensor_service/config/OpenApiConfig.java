@@ -8,7 +8,7 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.License;
 
-@OpenAPIDefinition(info = @Info(title = "Book Microservice API", version = "1", description = "API for managing books"))
+@OpenAPIDefinition(info = @Info(title = "SafeRoute Sensor API", version = "1", description = "API de telemetria de caminhões refrigerados"))
 public class OpenApiConfig {
 
   @Bean
@@ -16,7 +16,7 @@ public class OpenApiConfig {
     return new OpenAPI()
         .components(new Components())
         .info(new io.swagger.v3.oas.models.info.Info()
-            .title("Book Microservice API")
+            .title("SafeRoute Sensor API")
             .version("1.0")
             .license(new License()
                 .name("")
