@@ -15,7 +15,7 @@ pipeline {
                     def services = ['sensor-service', 'alert-service']
                     services.each { svc ->
                         dir("services/${svc}") {
-                            sh 'mvn test'
+                            sh 'mvn verify'
                         }
                     }
                 }
@@ -56,6 +56,10 @@ pipeline {
                 )
                 archiveArtifacts(
                     artifacts: 'services/**/target/surefire-reports/**',
+                    allowEmptyArchive: true
+                )
+                archiveArtifacts(
+                    artifacts: 'services/**/target/site/jacoco/**',
                     allowEmptyArchive: true
                 )
             }
