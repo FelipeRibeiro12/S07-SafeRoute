@@ -28,14 +28,14 @@ class AlertServiceTest {
     @BeforeEach
     void setUp() {
         alertService = new AlertService();
-        ReflectionTestUtils.setField(alertService, "tempMin", 2.0);
+        ReflectionTestUtils.setField(alertService, "tempMin", -2.0);
         ReflectionTestUtils.setField(alertService, "tempMax", 8.0);
         ReflectionTestUtils.setField(alertService, "alertRepository", alertRepository);
     }
 
     @Test
     void identifiesTemperatureBelowMinimumAsAlert() {
-        assertThat(alertService.isTemperatureAlert(telemetry(1.9))).isTrue();
+        assertThat(alertService.isTemperatureAlert(telemetry(-2.1))).isTrue();
     }
 
     @Test
@@ -46,7 +46,7 @@ class AlertServiceTest {
     @Test
     void acceptsTemperatureInsideRangeAndOnBoundaries() {
         assertThat(alertService.isTemperatureAlert(telemetry(5.0))).isFalse();
-        assertThat(alertService.isTemperatureAlert(telemetry(2.0))).isFalse();
+        assertThat(alertService.isTemperatureAlert(telemetry(-2.0))).isFalse();
         assertThat(alertService.isTemperatureAlert(telemetry(8.0))).isFalse();
     }
 
@@ -63,13 +63,13 @@ class AlertServiceTest {
 
     @Test
     void savesAlertWhenTemperatureIsBelowMinimum() {
-        TelemetryDTO data = telemetry(1.5);
+        TelemetryDTO data = telemetry(-3.0);
 
         alertService.handleAlert(data);
 
         Alert saved = captureSavedAlert();
         assertThat(saved.getTruckId()).isEqualTo("TRK-001");
-        assertThat(saved.getTemperature()).isEqualTo(1.5);
+        assertThat(saved.getTemperature()).isEqualTo(-3.0);
         assertThat(saved.getLatitude()).isEqualTo(-23.55);
         assertThat(saved.getLongitude()).isEqualTo(-46.63);
         assertThat(saved.getTimestamp()).isNotNull();

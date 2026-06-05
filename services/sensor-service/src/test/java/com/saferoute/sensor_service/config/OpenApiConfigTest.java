@@ -13,7 +13,7 @@ class OpenApiConfigTest {
         OpenAPI openAPI = new OpenApiConfig().customOpenAPI();
 
         assertThat(openAPI.getComponents()).isNotNull();
-        assertThat(openAPI.getInfo().getTitle()).isEqualTo("Book Microservice API");
+        assertThat(openAPI.getInfo().getTitle()).isEqualTo("SafeRoute Sensor API");
         assertThat(openAPI.getInfo().getVersion()).isEqualTo("1.0");
         assertThat(openAPI.getInfo().getLicense().getName()).isEmpty();
         assertThat(openAPI.getInfo().getLicense().getUrl()).isEmpty();
