@@ -19,3 +19,17 @@ resilience4j:
         slidingWindowSize: 5
         failureRateThreshold: 50
         waitDurationInOpenState: 10s
+        
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+
+  endpoint:
+    health:
+      show-details: always
+
+  metrics:
+    tags:
+      application: ${spring.application.name}
