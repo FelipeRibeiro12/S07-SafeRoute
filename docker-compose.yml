@@ -88,5 +88,35 @@ services:
       eureka-server:
         condition: service_healthy
 
+  # CI/CD
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: saferoute-mailhog
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+  jenkins:
+    build:
+      context: ./jenkins
+      dockerfile: Dockerfile
+    container_name: saferoute-jenkins
+    ports:
+      - "8090:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins-data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - JENKINS_ADMIN_ID=${JENKINS_ADMIN_ID:-admin}
+      - JENKINS_ADMIN_PASSWORD=${JENKINS_ADMIN_PASSWORD:-admin}
+      - NOTIFY_EMAIL=${NOTIFY_EMAIL:-ci@saferoute.local}
+      - REPO_URL=${REPO_URL}
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+    depends_on:
+      - mailhog
+
 volumes:
   postgres-data:
+  jenkins-data:
