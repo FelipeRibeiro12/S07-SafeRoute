@@ -11,6 +11,7 @@ docker build -t alert-service:latest ./services/alert-service
 
 echo Iniciando
 kubectl get hpa
+kubectl apply -f ./k8s/0-postgres-secret.yaml
 kubectl apply -f ./k8s/1-postgres-db.yaml
 kubectl apply -f ./k8s/4-config-server.yaml
 echo Aguardando estabilizar
