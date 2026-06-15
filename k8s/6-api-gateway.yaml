@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: api-gateway:latest
+          image: thuliott/saferoute-api-gateway:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080

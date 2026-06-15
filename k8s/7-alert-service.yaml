@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: alert-service
-          image: alert-service:latest
+          image: thuliott/saferoute-alert-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8082

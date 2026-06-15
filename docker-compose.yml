@@ -22,6 +22,7 @@ services:
   # Infra
   config-server:
     build: ./services/config-server
+    image: thuliott/saferoute-config-server:latest
     container_name: config-server
     ports:
       - "8888:8888"
@@ -36,6 +37,7 @@ services:
   # Service Discovery
   eureka-server:
     build: ./services/eureka-server
+    image: thuliott/saferoute-eureka-server:latest
     container_name: eureka-server
     ports:
       - "8761:8761"
@@ -53,7 +55,7 @@ services:
   # Services
   api-gateway:
     build: ./services/api-gateway
-    image: user-name/saferoute-api-gateway:latest
+    image: thuliott/saferoute-api-gateway:latest
     container_name: api-gateway
     restart: on-failure
     ports:
@@ -66,7 +68,7 @@ services:
 
   sensor-service:
     build: ./services/sensor-service
-    image: user-name/saferoute-sensor-service:latest
+    image: thuliott/saferoute-sensor-service:latest
     container_name: sensor-service
     restart: on-failure
     depends_on:
@@ -77,7 +79,7 @@ services:
 
   alert-service:
     build: ./services/alert-service
-    image: user-name/saferoute-alert-service:latest
+    image: thuliott/saferoute-alert-service:latest
     container_name: alert-service
     restart: on-failure
     environment:
