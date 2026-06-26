@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    triggers {
+        pollSCM('H/5 * * * *')
+    }
+
     environment {
         SMTP_HOST = "${env.SMTP_HOST ?: 'mailhog'}"
         SMTP_PORT = "${env.SMTP_PORT ?: '1025'}"
@@ -54,11 +58,11 @@ pipeline {
                     rm -rf "$ARTIFACT_DIR"
                     mkdir -p "$ARTIFACT_DIR"
 
-                    find services \( \
-                        -path "*/target/*.jar" -o \
-                        -path "*/target/surefire-reports/*" -o \
-                        -path "*/target/site/jacoco/*" \
-                    \) -type f | while IFS= read -r file; do
+                    {
+                        find services -path "*/target/*.jar" -type f
+                        find services -path "*/target/surefire-reports/*" -type f
+                        find services -path "*/target/site/jacoco/*" -type f
+                    } | while IFS= read -r file; do
                         mkdir -p "$ARTIFACT_DIR/$(dirname "$file")"
                         cp "$file" "$ARTIFACT_DIR/$file"
                     done
