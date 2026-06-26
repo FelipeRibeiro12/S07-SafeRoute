@@ -1,10 +1,10 @@
 import asyncio
 import aiohttp
+import os
 import random
-import time
 from datetime import datetime
 
-URL = "http://localhost:8080/sensor/telemetry"
+URL = os.environ.get("TARGET_URL", "http://localhost:8080/sensor/telemetry")
 TRUCKS = [f"TRUCK-{i}" for i in range(1, 1000)] # Gerando 1000 caminhões
 
 async def send_data(session, truck_id):

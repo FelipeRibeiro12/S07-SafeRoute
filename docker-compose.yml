@@ -125,6 +125,18 @@ services:
     depends_on:
       - mailhog
 
+  # Simulator
+  simulator:
+    build:
+      context: .
+      dockerfile: simulator/Dockerfile
+    container_name: saferoute-simulator
+    environment:
+      - TARGET_URL=http://api-gateway:8080/sensor/telemetry
+    depends_on:
+      - api-gateway
+    restart: on-failure
+
   prometheus:
     image: prom/prometheus:latest
     container_name: saferoute-prometheus
