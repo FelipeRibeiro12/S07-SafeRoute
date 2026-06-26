@@ -104,6 +104,7 @@ services:
       - "1025:1025"
 
   jenkins:
+    image: thuliott/saferoute-jenkins:latest
     build:
       context: ./jenkins
       dockerfile: Dockerfile

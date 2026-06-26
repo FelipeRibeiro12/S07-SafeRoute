@@ -4,6 +4,7 @@ pipeline {
     environment {
         SMTP_HOST = "${env.SMTP_HOST ?: 'mailhog'}"
         SMTP_PORT = "${env.SMTP_PORT ?: '1025'}"
+        ARTIFACT_DIR = 'ci-artifacts'
         // NOTIFY_EMAIL must be set via docker-compose — never hardcoded here
     }
 
@@ -49,18 +50,28 @@ pipeline {
 
         stage('Archive Artifacts') {
             steps {
+                sh '''
+                    rm -rf "$ARTIFACT_DIR"
+                    mkdir -p "$ARTIFACT_DIR"
+
+                    find services \( \
+                        -path "*/target/*.jar" -o \
+                        -path "*/target/surefire-reports/*" -o \
+                        -path "*/target/site/jacoco/*" \
+                    \) -type f | while IFS= read -r file; do
+                        mkdir -p "$ARTIFACT_DIR/$(dirname "$file")"
+                        cp "$file" "$ARTIFACT_DIR/$file"
+                    done
+
+                    if ! find "$ARTIFACT_DIR" -path "*/target/*.jar" -type f | grep -q .; then
+                        echo "No JAR artifacts found."
+                        exit 1
+                    fi
+                '''
                 archiveArtifacts(
-                    artifacts: 'services/*/target/*.jar',
+                    artifacts: 'ci-artifacts/**',
                     fingerprint: true,
                     allowEmptyArchive: false
-                )
-                archiveArtifacts(
-                    artifacts: 'services/**/target/surefire-reports/**',
-                    allowEmptyArchive: true
-                )
-                archiveArtifacts(
-                    artifacts: 'services/**/target/site/jacoco/**',
-                    allowEmptyArchive: true
                 )
             }
         }

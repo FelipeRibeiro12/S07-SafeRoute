@@ -4,7 +4,6 @@ SafeRoute e uma arquitetura de microsservicos para recebimento de telemetria de 
 
 O projeto usa Spring Boot, Spring Cloud Config, Eureka, API Gateway, PostgreSQL, Jenkins, Prometheus, Grafana e manifests Kubernetes.
 
-
 Validacoes executadas localmente:
 
 ```bash
@@ -17,24 +16,42 @@ docker manifest inspect thuliott/saferoute-eureka-server:latest
 docker manifest inspect thuliott/saferoute-api-gateway:latest
 docker manifest inspect thuliott/saferoute-sensor-service:latest
 docker manifest inspect thuliott/saferoute-alert-service:latest
+docker manifest inspect thuliott/saferoute-jenkins:latest
 ```
+
+## Imagens Docker
+
+Imagens publicadas no Docker Hub para `linux/amd64` e `linux/arm64`:
+
+
+| Componente       | Imagem                                                                                                   |
+| ---------------- | -------------------------------------------------------------------------------------------------------- |
+| `config-server`  | [`thuliott/saferoute-config-server:latest`](https://hub.docker.com/r/thuliott/saferoute-config-server)   |
+| `eureka-server`  | [`thuliott/saferoute-eureka-server:latest`](https://hub.docker.com/r/thuliott/saferoute-eureka-server)   |
+| `api-gateway`    | [`thuliott/saferoute-api-gateway:latest`](https://hub.docker.com/r/thuliott/saferoute-api-gateway)       |
+| `sensor-service` | [`thuliott/saferoute-sensor-service:latest`](https://hub.docker.com/r/thuliott/saferoute-sensor-service) |
+| `alert-service`  | [`thuliott/saferoute-alert-service:latest`](https://hub.docker.com/r/thuliott/saferoute-alert-service)   |
+| `jenkins`        | [`thuliott/saferoute-jenkins:latest`](https://hub.docker.com/r/thuliott/saferoute-jenkins)               |
+
 
 ## Arquitetura
 
 Principais componentes:
 
-| Componente | Porta | Descricao |
-| --- | ---: | --- |
-| `config-server` | `8888` | Centraliza as configuracoes dos microsservicos |
-| `eureka-server` | `8761` | Service discovery dos servicos Spring |
-| `api-gateway` | `8080` | Entrada HTTP principal da aplicacao |
-| `sensor-service` | `8081` | Recebe telemetria dos caminhoes |
-| `alert-service` | `8082` | Analisa telemetria e registra alertas |
-| `postgres-db` | `5433 -> 5432` | Banco usado pelo `alert-service` |
-| `jenkins` | `8090` | Pipeline CI local |
-| `mailhog` | `8025`, `1025` | Captura e-mails enviados pelo Jenkins |
-| `prometheus` | `9090` | Coleta metricas dos servicos |
-| `grafana` | `3000` | Visualizacao de metricas |
+
+| Componente       | Porta          | Descricao                                      |
+| ---------------- | -------------- | ---------------------------------------------- |
+| `config-server`  | `8888`         | Centraliza as configuracoes dos microsservicos |
+| `eureka-server`  | `8761`         | Service discovery dos servicos Spring          |
+| `api-gateway`    | `8080`         | Entrada HTTP principal da aplicacao            |
+| `sensor-service` | `8081`         | Recebe telemetria dos caminhoes                |
+| `alert-service`  | `8082`         | Analisa telemetria e registra alertas          |
+| `postgres-db`    | `5433 -> 5432` | Banco usado pelo `alert-service`               |
+| `jenkins`        | `8090`         | Pipeline CI local                              |
+| `mailhog`        | `8025`, `1025` | Captura e-mails enviados pelo Jenkins          |
+| `prometheus`     | `9090`         | Coleta metricas dos servicos                   |
+| `grafana`        | `3000`         | Visualizacao de metricas                       |
+
 
 Fluxo principal:
 
@@ -51,6 +68,8 @@ Fluxo principal:
 - Git
 - Java 21 e Maven, caso queira rodar os servicos fora do Docker
 - Kubernetes e `kubectl`, apenas para usar a pasta `k8s`
+
+Observacao: os servicos Java foram configurados para Java 21. Para validar testes e cobertura fora do Docker/Jenkins, use JDK 21.
 
 ## Variaveis De Ambiente
 
@@ -184,8 +203,15 @@ Pipeline:
 1. Roda `mvn verify` em `sensor-service` e `alert-service`.
 2. Gera relatorios JUnit.
 3. Executa build dos servicos Java.
-4. Arquiva `.jar`, relatorios de teste e relatorios JaCoCo.
-5. Envia notificacao por e-mail usando MailHog.
+4. Organiza `.jar`, relatorios de teste e relatorios JaCoCo em `ci-artifacts/`.
+5. Arquiva `ci-artifacts/**` como artefatos do build no Jenkins.
+6. Envia notificacao por e-mail usando MailHog.
+
+Depois de executar um build, os artefatos ficam disponiveis em:
+
+```text
+saferoute-pipeline -> build executado -> Build Artifacts
+```
 
 O MailHog pode ser acessado em:
 
@@ -274,15 +300,18 @@ Faca login:
 docker login
 ```
 
-As imagens dos microsservicos estao configuradas para o usuario Docker Hub `thuliott`:
+As imagens do projeto estao configuradas para o usuario Docker Hub `thuliott` e publicadas como multi-arch (`linux/amd64` e `linux/arm64`):
 
-| Servico | Imagem |
-| --- | --- |
-| Config Server | `thuliott/saferoute-config-server:latest` |
-| Eureka Server | `thuliott/saferoute-eureka-server:latest` |
-| API Gateway | `thuliott/saferoute-api-gateway:latest` |
+
+| Servico        | Imagem                                     |
+| -------------- | ------------------------------------------ |
+| Config Server  | `thuliott/saferoute-config-server:latest`  |
+| Eureka Server  | `thuliott/saferoute-eureka-server:latest`  |
+| API Gateway    | `thuliott/saferoute-api-gateway:latest`    |
 | Sensor Service | `thuliott/saferoute-sensor-service:latest` |
-| Alert Service | `thuliott/saferoute-alert-service:latest` |
+| Alert Service  | `thuliott/saferoute-alert-service:latest`  |
+| Jenkins        | `thuliott/saferoute-jenkins:latest`        |
+
 
 Links:
 
@@ -291,12 +320,20 @@ Links:
 - `https://hub.docker.com/r/thuliott/saferoute-api-gateway`
 - `https://hub.docker.com/r/thuliott/saferoute-sensor-service`
 - `https://hub.docker.com/r/thuliott/saferoute-alert-service`
+- `https://hub.docker.com/r/thuliott/saferoute-jenkins`
 
 Depois execute:
 
 ```bash
 docker compose build
 docker compose push
+```
+
+Para baixar e executar as imagens publicadas sem rebuild local:
+
+```bash
+docker compose pull
+docker compose up -d
 ```
 
 Os manifests em `k8s/` tambem apontam para as imagens publicadas, por exemplo:
@@ -365,21 +402,35 @@ Para que a IA foi usada:
 
 - Criar a base deste `README.md`.
 - Ajustar nomes das imagens Docker Hub para o usuario `thuliott`.
-- Apoiar na criacao de funcoes otimizadas
-- Checagem dos scripts para melhor uso das boas praticas
+- Verificar se o `jenkins/Dockerfile` estava correto para criar o Jenkins em container com Maven, Python, plugins e Configuration as Code.
+- Apoiar na criacao do arquivo `simulator.py` para envio de telemetrias em massa ao API Gateway.
+- Revisar scripts, comandos de validacao e boas praticas de Docker Compose.
 
-Exemplo real de prompt usado:
+Exemplos reais de prompts usados:
 
-| Prompt | Resposta aproveitada |
-| --- | --- |
-| `Crie um README completo para este projeto, incluindo instalacao, execucao com Docker Compose, uso da API, Jenkins, Kubernetes, publicacao no Docker Hub e transparencia sobre uso de IA` | Geracao inicial do README, depois revisada e expandida |
+
+| Prompt                                                                                                                                                                                    | Resposta                                                                                                |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `Crie um README completo para este projeto, incluindo instalacao, execucao com Docker Compose, uso da API, Jenkins, Kubernetes, publicacao no Docker Hub e transparencia sobre uso de IA` | Geracao inicial do README, depois revisada e expandida                                                  |
+| `Gere um simulador em Python para enviar varias telemetrias para o endpoint /sensor/telemetry do API Gateway`                                                                             | Criacao da base do `simulator.py`, depois ajustada para o formato de dados usado pelo SafeRoute         |
+| `Verifique se o Dockerfile do Jenkins esta correto para rodar o pipeline em container com Maven, Python, plugins e JCasC`                                                                 | Revisao do `jenkins/Dockerfile` e confirmacao dos pontos necessarios para o Jenkins executar o pipeline |
+| `Adicione os links das imagens no readme`                                                                                                                                                 | Os links das imagens Docker foram adicionados ao README                                                 |
+
 
 Respostas aceitas, ajustadas ou descartadas:
 
-- Aceitas: estrutura do README, comandos de validacao e ajuste de falhas na build.
+- Aceitas: estrutura do README, comandos de validacao, base do simulador, publicacao da imagem Jenkins e inclusao dos links do Docker Hub.
+- Ajustadas: textos do README, nomes das imagens, variaveis de ambiente, simulador de telemetria e explicacoes para ficarem coerentes com o projeto.
+- Descartadas: sugestoes genericas que nao refletiam a ideia inicial
 
 Dinamica de uso:
 
-- A IA foi usada como apoio de revisao,desenvolvimento, documentacao, debug e verificacao.
+- A IA foi usada como apoio de revisao, desenvolvimento, documentacao, debug e verificacao.
 - As mudancas foram conferidas com comandos locais como `docker compose build`, `mvn verify` e `docker manifest inspect`.
 
+Partes desenvolvidas manualmente pelo grupo:
+
+- Definicao do dominio do sistema SafeRoute e regras de alerta de temperatura.
+- Implementacao dos microsservicos Spring Boot.
+- Organizacao da arquitetura com Config Server, Eureka, API Gateway, banco, observabilidade e CI.
+- Revisao final das sugestoes de IA antes de entrar no repositorio.
