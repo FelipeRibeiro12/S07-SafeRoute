@@ -128,8 +128,8 @@ services:
   # Simulator
   simulator:
     build:
-      context: .
-      dockerfile: simulator/Dockerfile
+      context: ./simulator
+      dockerfile: Dockerfile
     container_name: saferoute-simulator
     environment:
       - TARGET_URL=http://api-gateway:8080/sensor/telemetry
