@@ -1,5 +1,7 @@
 services:
-  # Database
+
+  #bd
+
   postgres-db:
     image: postgres:15
     container_name: alert-db
@@ -9,38 +11,44 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       TZ: America/Sao_Paulo
     ports:
+      #host:container
       - "5433:5432"
     volumes:
+      # persistencia do bd
       - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
+      # espera subir
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Infra
   config-server:
+    # centraliza todas as configuracoes dos servicos num lugar so
     image: thuliott/saferoute-config-server:latest
     container_name: config-server
     ports:
       - "8888:8888"
     restart: on-failure
     healthcheck:
+      # espera subir
       test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5
+      # delay
       start_period: 60s
 
-  # Service Discovery
   eureka-server:
+    # cada microservico se registra para se encontrarem e comunicarem
     image: thuliott/saferoute-eureka-server:latest
     container_name: eureka-server
     ports:
       - "8761:8761"
     restart: on-failure
     depends_on:
+      # verifica config-server antes
       config-server:
         condition: service_healthy
     healthcheck:
@@ -50,20 +58,22 @@ services:
       retries: 5
       start_period: 60s
 
-  # Services
   api-gateway:
+    # ponto de entrada unico
     image: thuliott/saferoute-api-gateway:latest
     container_name: api-gateway
     restart: on-failure
     ports:
       - "8080:8080"
     depends_on:
+      # verifica config-server e eureka-server antes
       config-server:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
 
   sensor-service:
+    # recebe a telemetria
     image: thuliott/saferoute-sensor-service:latest
     container_name: sensor-service
     restart: on-failure
@@ -74,15 +84,18 @@ services:
         condition: service_healthy
 
   alert-service:
+    # analisa os dados e salva no bd
     image: thuliott/saferoute-alert-service:latest
     container_name: alert-service
     restart: on-failure
     environment:
+      # usa o nome do container como host
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/${POSTGRES_DB}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
       - TZ=America/Sao_Paulo
     depends_on:
+      # verifica config-server, eureka-server e postgres-db antes
       config-server:
         condition: service_healthy
       postgres-db:
@@ -90,53 +103,65 @@ services:
       eureka-server:
         condition: service_healthy
 
-  # CI/CD
   mailhog:
+    # servidor de email falso pra capturar os emails do jenkins sem enviar de verdade
     image: mailhog/mailhog:latest
     container_name: saferoute-mailhog
     ports:
+      # 8025 e a interface web pra visualizar os emails capturados
       - "8025:8025"
+      # 1025 e a porta smtp que o jenkins usa pra enviar
       - "1025:1025"
 
   jenkins:
     image: thuliott/saferoute-jenkins:latest
     container_name: saferoute-jenkins
     ports:
+      # 8090 no host porque 8080 ja ta ocupado pelo api-gateway
       - "8090:8080"
+      # porta pra agents remotos do jenkins se conectarem
       - "50000:50000"
     volumes:
+      # persiste os dados do jenkins (jobs, historico, configs)
       - jenkins-data:/var/jenkins_home
+      # da acesso ao docker do host pra jenkins poder rodar containers no pipeline
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - JENKINS_ADMIN_ID=${JENKINS_ADMIN_ID:-admin}
       - JENKINS_ADMIN_PASSWORD=${JENKINS_ADMIN_PASSWORD:-admin}
       - NOTIFY_EMAIL=${NOTIFY_EMAIL:-ci@saferoute.local}
       - REPO_URL=${REPO_URL}
+      # aponta o smtp pro mailhog pelo nome do container
       - SMTP_HOST=mailhog
       - SMTP_PORT=1025
     depends_on:
+      # mailhog precisa estar no ar antes do jenkins tentar enviar emails
       - mailhog
 
-  # Simulator
   simulator:
+    # manda dados de telemetria fake pra testar o sistema em escala
     image: thuliott/saferoute-simulator:latest
     container_name: saferoute-simulator
     environment:
+      # usa o nome do container como host, nao precisa saber o ip
       - TARGET_URL=http://api-gateway:8080/sensor/telemetry
     depends_on:
       - api-gateway
     restart: on-failure
 
   prometheus:
+    # coleta metricas dos servicos periodicamente (scraping)
     image: prom/prometheus:latest
     container_name: saferoute-prometheus
     ports:
       - "9090:9090"
     volumes:
+      # monta o arquivo local de config que diz quais servicos monitorar
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     restart: unless-stopped
 
   grafana:
+    # dashboard visual que le as metricas do prometheus e monta os graficos
     image: grafana/grafana:latest
     container_name: saferoute-grafana
     ports:
@@ -144,9 +169,11 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     depends_on:
+      # precisa do prometheus no ar pra ter de onde buscar os dados
       - prometheus
     restart: unless-stopped
 
 volumes:
+  # volumes nomeados: docker gerencia onde ficam no disco
   postgres-data:
   jenkins-data:
