@@ -8,7 +8,7 @@ Validacoes executadas localmente:
 
 ```bash
 docker compose config
-docker compose build
+docker compose pull
 cd services/sensor-service && mvn verify
 cd services/alert-service && mvn verify
 docker manifest inspect thuliott/saferoute-config-server:latest
@@ -17,11 +17,12 @@ docker manifest inspect thuliott/saferoute-api-gateway:latest
 docker manifest inspect thuliott/saferoute-sensor-service:latest
 docker manifest inspect thuliott/saferoute-alert-service:latest
 docker manifest inspect thuliott/saferoute-jenkins:latest
+docker manifest inspect thuliott/saferoute-simulator:latest
 ```
 
 ## Imagens Docker
 
-Imagens publicadas no Docker Hub para `linux/amd64` e `linux/arm64`:
+Imagens publicadas no Docker Hub para `linux/amd64`:
 
 
 | Componente       | Imagem                                                                                                   |
@@ -32,6 +33,7 @@ Imagens publicadas no Docker Hub para `linux/amd64` e `linux/arm64`:
 | `sensor-service` | [`thuliott/saferoute-sensor-service:latest`](https://hub.docker.com/r/thuliott/saferoute-sensor-service) |
 | `alert-service`  | [`thuliott/saferoute-alert-service:latest`](https://hub.docker.com/r/thuliott/saferoute-alert-service)   |
 | `jenkins`        | [`thuliott/saferoute-jenkins:latest`](https://hub.docker.com/r/thuliott/saferoute-jenkins)               |
+| `simulator`      | [`thuliott/saferoute-simulator:latest`](https://hub.docker.com/r/thuliott/saferoute-simulator)           |
 
 
 ## Arquitetura
@@ -97,7 +99,8 @@ REPO_URL=https://github.com/FelipeRibeiro12/S07-SafeRoute
 Na raiz do projeto:
 
 ```bash
-docker compose up --build
+docker compose pull
+docker compose up -d
 ```
 
 Servicos principais:
@@ -300,7 +303,7 @@ Faca login:
 docker login
 ```
 
-As imagens do projeto estao configuradas para o usuario Docker Hub `thuliott` e publicadas como multi-arch (`linux/amd64` e `linux/arm64`):
+As imagens do projeto estao configuradas para o usuario Docker Hub `thuliott` e publicadas para `linux/amd64`:
 
 
 | Servico        | Imagem                                     |
@@ -311,6 +314,7 @@ As imagens do projeto estao configuradas para o usuario Docker Hub `thuliott` e 
 | Sensor Service | `thuliott/saferoute-sensor-service:latest` |
 | Alert Service  | `thuliott/saferoute-alert-service:latest`  |
 | Jenkins        | `thuliott/saferoute-jenkins:latest`        |
+| Simulator      | `thuliott/saferoute-simulator:latest`      |
 
 
 Links:
@@ -321,12 +325,18 @@ Links:
 - `https://hub.docker.com/r/thuliott/saferoute-sensor-service`
 - `https://hub.docker.com/r/thuliott/saferoute-alert-service`
 - `https://hub.docker.com/r/thuliott/saferoute-jenkins`
+- `https://hub.docker.com/r/thuliott/saferoute-simulator`
 
-Depois execute:
+Para regenerar e publicar as imagens a partir dos Dockerfiles locais:
 
 ```bash
-docker compose build
-docker compose push
+docker buildx build --platform linux/amd64 -t thuliott/saferoute-config-server:latest --push ./services/config-server
+docker buildx build --platform linux/amd64 -t thuliott/saferoute-eureka-server:latest --push ./services/eureka-server
+docker buildx build --platform linux/amd64 -t thuliott/saferoute-api-gateway:latest --push ./services/api-gateway
+docker buildx build --platform linux/amd64 -t thuliott/saferoute-sensor-service:latest --push ./services/sensor-service
+docker buildx build --platform linux/amd64 -t thuliott/saferoute-alert-service:latest --push ./services/alert-service
+docker buildx build --platform linux/amd64 -t thuliott/saferoute-jenkins:latest --push ./jenkins
+docker buildx build --platform linux/amd64 -t thuliott/saferoute-simulator:latest --push ./simulator
 ```
 
 Para baixar e executar as imagens publicadas sem rebuild local:

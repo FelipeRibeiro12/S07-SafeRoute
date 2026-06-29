@@ -21,7 +21,6 @@ services:
 
   # Infra
   config-server:
-    build: ./services/config-server
     image: thuliott/saferoute-config-server:latest
     container_name: config-server
     ports:
@@ -36,7 +35,6 @@ services:
 
   # Service Discovery
   eureka-server:
-    build: ./services/eureka-server
     image: thuliott/saferoute-eureka-server:latest
     container_name: eureka-server
     ports:
@@ -54,7 +52,6 @@ services:
 
   # Services
   api-gateway:
-    build: ./services/api-gateway
     image: thuliott/saferoute-api-gateway:latest
     container_name: api-gateway
     restart: on-failure
@@ -67,7 +64,6 @@ services:
         condition: service_healthy
 
   sensor-service:
-    build: ./services/sensor-service
     image: thuliott/saferoute-sensor-service:latest
     container_name: sensor-service
     restart: on-failure
@@ -78,7 +74,6 @@ services:
         condition: service_healthy
 
   alert-service:
-    build: ./services/alert-service
     image: thuliott/saferoute-alert-service:latest
     container_name: alert-service
     restart: on-failure
@@ -105,9 +100,6 @@ services:
 
   jenkins:
     image: thuliott/saferoute-jenkins:latest
-    build:
-      context: ./jenkins
-      dockerfile: Dockerfile
     container_name: saferoute-jenkins
     ports:
       - "8090:8080"
@@ -127,9 +119,7 @@ services:
 
   # Simulator
   simulator:
-    build:
-      context: ./simulator
-      dockerfile: Dockerfile
+    image: thuliott/saferoute-simulator:latest
     container_name: saferoute-simulator
     environment:
       - TARGET_URL=http://api-gateway:8080/sensor/telemetry
